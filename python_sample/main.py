@@ -2,15 +2,14 @@ import json
 import csv
 import pandas as pd
 import os
-
-from predictor import Predictor
+from python_sample.predictor import Predictor
 
 data_path = "./python_sample/data"  # The directory of the input data
 output_path = "./python_sample/"  # The directory of the output data
 
 
 def format_result(result):
-    rex = {"accusation": [], "articles": [], "imprisonment": -3}
+    rex = {"accusation": [], "articles": []}
 
     res_acc = []
     for x in result["accusation"]:
@@ -53,22 +52,23 @@ if __name__ == "__main__":
         #inf = open(os.path.join(data_path, file_name), "r",encoding='utf-8')
         inf=pd.read_csv(os.path.join(data_path, file_name),header=0)
         # ouf = open(os.path.join(output_path, file_name), "w",encoding='utf-8')
-        ouf=open(os.path.join(output_path, 'result.csv'), 'w', newline='')
+        #ouf=open(os.path.join(output_path, 'result.csv'), 'w', newline='')
         print(os.path.join(data_path, file_name))
 
-        filewriter = csv.writer(ouf)
+        #filewriter = csv.writer(ouf)
 
         fact = []
         
         fact=inf['fact']
         result=solve(fact)
+'''
         cnt+=len(result)
         for l in fact:
             for k, v in l.items():
                 print(k, v)
                 filewriter.writerow([k, v])
             
-'''            
+           
         fact = []
     #读取数据集每一行的fact,每batch(500)行solve一次
         for line in inf:
@@ -87,4 +87,4 @@ if __name__ == "__main__":
                 print(json.dumps(x), file=ouf)
             fact = []
 '''
-ouf.close()
+#ouf.close()
