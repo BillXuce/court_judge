@@ -1,0 +1,1 @@
+f=pd.DataFrame(pd.read_csv(file_name,header=1))
