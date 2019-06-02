@@ -10,10 +10,9 @@ localpath = os.path.dirname(__file__)
 
 class Predictor(object):
     def __init__(self, num_words=40000, max_len=999,
-                 path_tokenizer=os.path.join(localpath, 'variables/tokenizer_40000_cleaned.pkl'),
-                 path_accusation=None,
-                 path_relative_articles=os.path.join(localpath,
-                                                     './model/textcnn_accusation_articles_cleaned_token_50000_pad_500_filter_512_hidden_1000_epoch_3_accu_80_f1_80.h5')):
+                 path_tokenizer='./variables/tokenizer_40000.pkl',
+                 path_accusation='./model/textcnn_accusation_token_40000_pad_999_filter_512_hidden_1000_epoch_1_accu_95_f1_55.h5',
+                 path_relative_articles='./model/textcnn_articles_token_40000_pad_999_filter_512_hidden_1000_epoch_1_accu_95_f1_55.h5'):
         self.num_words = num_words
         self.max_len = max_len
         self.path_accusation = path_accusation
@@ -49,10 +48,18 @@ class Predictor(object):
                 x_return = np.arange(1, n + 1)[x == x.max()].tolist()
             return x_return
 
+        def predict2tag(x, sets):
+            x_return = sets[x > 0.5].tolist()
+            if len(x_return) == 0:
+                x_return = sets[x == x.max()].tolist()
+            return x_return
+
+        acc_sets=np.load('../variables/label_set/set_accusation.npy')
+
         result = []
         for i in range(0, len(content)):
             result.append({
-                "accusation": accusation[i],
+                "accusation": predict2tag(accusation[i],acc_sets),
                 "articles": transform(relative_articles[i])
             })
         return result

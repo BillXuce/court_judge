@@ -1,10 +1,7 @@
-# -*- coding: UTF-8 -*-
-import pandas as pd
-import os
+import json
 import jieba
 import numpy as np
 import re
-import json
 from keras.preprocessing.text import Tokenizer
 
 jieba.setLogLevel('WARN')
@@ -14,62 +11,36 @@ class data_process(object):
     def __init__(self):
         self.data_label = {}
         self.label_collection = {}
-        self.label_type = {'articles','accusation'}
+        self.label_type = {'law': 'relevant_articles', 'accu': 'accusation'}
         self.decomposition = {}
-        self.shape=(0,0)
 
-#    def get_data(self, file_path=None):
-#        '''
-#        读取数据，格式为json / read data and file type is json
-#        :param file_path: 数据文件的路径 / data file path
-#        :return: 列表 / a list
-#        '''
-#        data = []
-#        with open(file_path, 'r', encoding='UTF-8') as f:
-#            file = f.readlines()
-#            for content in file:
-#                data.append(json.loads(content))
-#        self.data_path = file_path
-#        self.data = data
-    def get_data(self, file_name=None):
-        data=[]
-        f=pd.DataFrame(pd.read_csv(file_name,header=1))
-        rows=f.shape[0]
-        columns=f.shape[1]
-        self.shape=(rows,columns)
-        for row in range(rows):
-            data.append([])
-            for column in range(columns):
-                data[row].append(f.values[row][column])
-        self.data_path=os.path.dirname(file_name)
-        self.data=data 
+    def get_data(self, file_path=None):
+        '''
+        读取数据，格式为json / read data and file type is json
+        :param file_path: 数据文件的路径 / data file path
+        :return: 列表 / a list
+        '''
+        data = []
+        with open(file_path, 'r', encoding='UTF-8') as f:
+            file = f.readlines()
+            for content in file:
+                data.append(json.loads(content))
+        self.data_path = file_path
+        self.data = data
 
-#    def decompose_data(self, name=''):
-#        '''
-#        解析json中的内容
-#        :param name: law | imprisonment | fact | accu
-#        :return:
-#        '''
-#        try:
-#            decomposition = [i[name] for i in self.data]
-#        except:
-#            decomposition = [i['meta'][self.label_type[name]] for i in self.data]
-#            if name == 'accu':
-#                decomposition = [[re.sub('[\[\]]', '', label) for label in i] for i in decomposition]
-#        self.decomposition.update({name: decomposition})
-#
-    def decompose_data(self,name='',filename='None'):
-        f=pd.read_csv(filename,header=0)
-        if name =='fact':
-            decomposition=f['fact']
-        elif name =='accusation':
-            decomposition=f['accusation']
-        elif name =='articles':
-            decomposition=f['articles']
-        self.decomposition.update({name:decomposition})
-        #print(decomposition[0])
-
-
+    def decompose_data(self, name=''):
+        '''
+        解析json中的内容
+        :param name: law | imprisonment | fact | accu
+        :return:
+        '''
+        try:
+            decomposition = [i[name] for i in self.data]
+        except:
+            decomposition = [i['meta'][self.label_type[name]] for i in self.data]
+            if name == 'accu':
+                decomposition = [[re.sub('[\[\]]', '', label) for label in i] for i in decomposition]
+        self.decomposition.update({name: decomposition})
 
     def replace_money_value(self, string):
         '''
@@ -122,7 +93,7 @@ class data_process(object):
     def segmentation(self, list=None, cut=True, word_len=1, path=None, replace_money_value=False, stopword=False):
         '''
         对文本列表进行分词 / seperate each word of the data in the text list
-        :param list: 列表（原文本）s
+        :param list: 列表（原文本）
         :param cut: 是否需要分词
         :param word_len: 保留的词语长度
         :param path: 保存路径
@@ -130,7 +101,6 @@ class data_process(object):
         :param stopword: 是否去掉部分停用词
         :return:
         '''
-        #print("segmentation start")
         if cut == False:
             seg_list = [[word for word in text if len(word) >= word_len] for text in list]
         else:
@@ -139,14 +109,13 @@ class data_process(object):
                             text in list]
             else:
                 seg_list = [[word for word in jieba.lcut(text) if len(word) >= word_len] for text in list]
-        #print("cutting done!")
+
         if stopword == True:
             seg_list = self.data_cleaning(seg_list)
-        #print("stopword process done!")
+
         if path != None:
             with open(path, 'w') as f:
                 json.dump(seg_list, f)
-        #print("segmentation done!")
         return seg_list
 
     def get_label_collection(self, label_type=None):
@@ -204,11 +173,11 @@ class data_process(object):
         :param label_set: 该标签列表对应的总标签类
         :return: 输出
         '''
-        #label = [str(i) for i in label]
+        label = [str(i) for i in label]
         one_hot = (np.in1d(np.array(label_set), label) + 0).reshape(1, -1)
         return one_hot
 
-    def transform_label(self, labels=None, label_type='articles'):
+    def transform_label(self, labels=None, label_type='law'):
         '''
 
         :param labels:
